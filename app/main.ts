@@ -11,7 +11,7 @@ const app = new Handler();
 
 app.addHandler("GET", "/", (_request, _response) => {})
 
-app.addHandler("GET", /\/foo\/(?<str>\w+)/, (_request, response, matches) => {
+app.addHandler("GET", /\/echo\/(?<str>\w+)/, (_request, response, matches) => {
   response.setBody(`${matches.str}\n`);
 })
 
