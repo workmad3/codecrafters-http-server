@@ -12,7 +12,7 @@ const app = new Handler();
 app.addHandler("GET", "/", (_request, _response) => {})
 
 app.addHandler("GET", /\/echo\/(?<str>\w+)/, (_request, response, matches) => {
-  response.setBody(`${matches.str}\n`);
+  response.setBody(`${matches.str}`);
 })
 
 const server = createServer((s) => new Request(s, app));
