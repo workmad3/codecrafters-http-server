@@ -1,5 +1,5 @@
 import type { Request } from "./request.js";
-import type { Socket } from "node:net";
+import { Headers } from "./headers.js";
 
 const STATUSES: Record<number, string> = {
   200: "OK",
@@ -9,18 +9,28 @@ const STATUSES: Record<number, string> = {
 export class Response {
   private sent = false;
   private statusCode = 200;
+  private headers = new Headers();
+  private contentType = "text/plain";
+  private responseBody = "";
 
-  constructor(private readonly request: Request, private readonly socket: Socket) {}
+  constructor(private readonly request: Request) {}
 
   setStatus(newStatus: number) {
     this.statusCode = newStatus;
+  }
+
+  setBody(newBody: string) {
+    this.responseBody = newBody;
   }
 
   get statusString() {
     return STATUSES[this.statusCode] ?? "Unknown";
   }
 
-  send() {
-    this.socket.write(`${this.request.version} ${this.statusCode} ${this.statusString}\r\n\r\n`);
+  toString() {
+    this.headers.addHeader("Content-Type", this.contentType);
+    this.headers.addHeader("Content-Length", this.responseBody.length.toString());
+
+    return `${this.request.version} ${this.statusCode} ${this.statusString}\r\n${this.headers.toString()}\r\n${this.responseBody}`;
   }
 }

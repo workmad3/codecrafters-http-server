@@ -12,7 +12,7 @@ export class Request {
   private headers = new Headers();
 
   constructor(private readonly socket: Socket, private readonly handler: Handler) {
-    this.response = new Response(this, socket);
+    this.response = new Response(this);
     this.initializeRequest();
   }
 
@@ -31,19 +31,19 @@ export class Request {
     });
 
     this.socket.on("end", () => {
-      console.log(this.data);
+      if (!this.finished) {
+        console.log("Request didn't terminate correctly");
+        console.log(this.data);
+      }
     })
 
     this.socket.on("close", () => {
-      if (!this.finished) {
-        console.log("Request terminated");
-      }
       this.socket.end();
     })
   }
 
   end() {
-    this.response.send();
+    this.socket.write(this.response.toString());
     this.finished = true;
     this.socket.end();
   }

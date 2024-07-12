@@ -9,22 +9,16 @@ const PORT = Number(env.PORT ?? 4221);
 
 const app = new Handler();
 
-app.addHandler("GET", "/", () => {
-  console.log("Index");
+app.addHandler("GET", "/", (_request, _response) => {})
+
+app.addHandler("GET", /\/foo\/(?<str>\w+)/, (_request, response, matches) => {
+  response.setBody(`${matches.str}\n`);
 })
 
-const server = createServer((s) => {
-  const request = new Request(s, app);
-  s.on("close", () => s.end());
-  s.on("end", () => console.log("Connection closed"));
-});
+const server = createServer((s) => new Request(s, app));
 
 server.on("listening", () => {
   console.log(`Listening on ${HOST}:${PORT}`)
 });
-
-server.on("connection", (s) => {
-  console.log("Connection started");
-})
 
 server.listen(PORT, HOST);
