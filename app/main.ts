@@ -23,7 +23,7 @@ app.addHandler("GET", "/user-agent", (request, response) => {
   response.setBody(request.getHeader("User-Agent"));
 })
 
-app.addHandler("GET", /\/files\/(?<filename>\w+)/, async (request, response, matches) => {
+app.addHandler("GET", /\/files\/(?<filename>(\w|-)+)/, async (request, response, matches) => {
   try {
     const contents = await readFile(join(filesDirectory, matches.filename), "ascii");
     response.setType("application/octet-stream");
