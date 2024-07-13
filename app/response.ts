@@ -63,8 +63,8 @@ export class Response {
     this.statusCode = newStatus;
   }
 
-  setBody(newBody: string) {
-    this.responseBody = newBody;
+  setBody(newBody: string | undefined) {
+    this.responseBody = newBody ?? "";
   }
 
   get status() {
