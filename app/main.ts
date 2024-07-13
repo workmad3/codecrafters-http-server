@@ -1,5 +1,5 @@
 import process, { env, argv } from "node:process";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { Handler } from "./handler.js";
@@ -30,6 +30,17 @@ app.addHandler("GET", /\/files\/(?<filename>(\w|-)+)/, async (request, response,
     response.setBody(contents);
   } catch(e) {
     response.setStatus(404);
+  }
+});
+
+app.addHandler("POST",  /\/files\/(?<filename>(\w|-)+)/, async (request, response, matches) => {
+  try {
+    const contents = request.body;
+    await writeFile(join(filesDirectory, matches.filename), contents);
+    
+    response.setStatus(201);
+  } catch(e) {
+    response.setStatus(500);
   }
 });
 

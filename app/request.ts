@@ -23,11 +23,18 @@ export class Request {
       }
       this.data += data.toString();
 
-      this.parseRequest();
+      try {
+        this.parseRequest();
 
-      if (this.headersComplete()) {
-        this.response.setVersion(this.requestLine.version!);
-        this.handler.run(this, this.response);
+        if (this.headersComplete() && this.bodyComplete()) {
+          this.response.setVersion(this.requestLine.version!);
+          this.handler.run(this, this.response);
+        }
+      } catch(e) {
+        console.log(e);
+
+        this.response.setStatus(500);
+        this.end();
       }
     });
 
@@ -54,7 +61,7 @@ export class Request {
       return;
     }
 
-    const [head, body] = this.data.split("\r\n\r\n");
+    const head = this.head;
     const [request, ...headers] = head.split("\r\n");
 
     this.requestLine.parseRequestLine(request);
@@ -68,8 +75,33 @@ export class Request {
     return this.requestLine.valid && this.data.includes("\r\n\r\n");
   }
 
+  bodyComplete() {
+    const body = this.body; 
+
+    if (body.length < this.contentLength) {
+      return false;
+    }
+
+    if (body.length === this.contentLength) {
+      return true;
+    }
+
+    throw new Error("Content too large");
+  }
+
   getHeader(name: string) {
     return this.headers.getHeader(name);
+  }
+
+  get head() {
+    const [head, _] = this.data.split("\r\n\r\n");
+    return head;
+  }
+
+  get body() {
+    const [_, body] = this.data.split("\r\n\r\n");
+
+    return body;
   }
 
   get method() {
@@ -82,5 +114,13 @@ export class Request {
 
   get version() {
     return this.requestLine.version;
+  }
+
+  get contentType() {
+    return this.getHeader("Content-Type") ?? "application/octet-stream";
+  }
+  
+  get contentLength() {
+    return Number(this.getHeader("Content-Length") ?? "0");
   }
 }

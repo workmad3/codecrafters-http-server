@@ -43,6 +43,12 @@ const STATUSES: Record<number, StatusCode> = {
     message: "Not Found",
     error: true,
     hasBody: true
+  },
+  500: {
+    code: 500,
+    message: "Internal Server Error",
+    error: true,
+    hasBody: true
   }
 }
 
