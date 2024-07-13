@@ -61,7 +61,7 @@ export const VALID_COMPRESSION_SCHEMES = {
     const result = await gzip(Buffer.from(body));
 
     const length = result.byteLength;
-    const data = result.toString("hex");
+    const data = result.toString();
  
     return [length, data];
   },
