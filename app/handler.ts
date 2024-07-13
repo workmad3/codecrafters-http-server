@@ -2,8 +2,8 @@ import type { Request} from "./request.js";
 import type { Response } from "./response.js";
 import type { HTTP_METHOD } from "./request_line.js";
 
-export type HandlerFunction = (request: Request, response: Response) => void;
-export type HandlerFunctionWithMatches = (request: Request, response: Response, matches: Record<string, string>) => void;
+export type HandlerFunction = (request: Request, response: Response) => void | Promise<void>;
+export type HandlerFunctionWithMatches = (request: Request, response: Response, matches: Record<string, string>) => void | Promise<void>;
 export class Handler {
   private handlers = new Map<HTTP_METHOD, Map<string, HandlerFunction>>();
   private regexpHandlers = new Map<HTTP_METHOD, Map<RegExp, HandlerFunctionWithMatches>>();
@@ -54,9 +54,18 @@ export class Handler {
   run(request: Request, response: Response) {
     if (!this.hasHandler(request.method!, request.path!)) {
       response.setStatus(404);
+      request.end();
+      return;
     } else {
-      this.getHandler(request.method!, request.path!)?.(request, response);
+      const result = this.getHandler(request.method!, request.path!)?.(request, response);
+
+      if (result instanceof Promise) {
+        result.then(() => request.end());
+        return;
+      }
+
+      request.end();
+      return;
     }
-    request.end();
   }
 }
