@@ -55,10 +55,13 @@ export class Request {
     })
   }
 
-  end() {
-    this.socket.write(this.response.toString());
-    this.finished = true;
-    this.socket.end();
+  async end() {
+    try {
+      this.socket.write(await this.response.toString());
+      this.finished = true;
+    } finally {
+      this.socket.end();
+    }
   }
 
   parseRequest() {

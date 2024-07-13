@@ -1,4 +1,8 @@
 import { Headers } from "./headers.js";
+import { gzip as gzipCb } from "node:zlib";
+import { promisify } from "node:util";
+
+const gzip = promisify(gzipCb);
 
 type StatusCode = {
   code: number,
@@ -52,8 +56,21 @@ const STATUSES: Record<number, StatusCode> = {
   }
 }
 
-export const VALID_COMPRESSION_SCHEMES = ["gzip"] as const;
-type VALID_COMPRESSION_SCHEME = typeof VALID_COMPRESSION_SCHEMES[number];
+export const VALID_COMPRESSION_SCHEMES = {
+  "gzip": async (body: string) => {
+    const result = await gzip(Buffer.from(body));
+
+    const length = result.byteLength;
+    const data = result.toString("hex");
+ 
+    return [length, data];
+  },
+  "uncompressed": async (body: string) => [
+    body.length, 
+    body
+  ],
+}
+type VALID_COMPRESSION_SCHEME = keyof typeof VALID_COMPRESSION_SCHEMES;
 
 export class Response {
   private statusCode = 200;
@@ -61,6 +78,7 @@ export class Response {
   private contentType = "text/plain";
   private responseBody = "";
   private version = "HTTP/1.1";
+  private compressor: VALID_COMPRESSION_SCHEME = "uncompressed";
 
   constructor() {}
 
@@ -81,11 +99,13 @@ export class Response {
   }
 
   setCompression(newEncoding: string | undefined) {
-    if (newEncoding && VALID_COMPRESSION_SCHEMES.includes(newEncoding as VALID_COMPRESSION_SCHEME)) {
+    if (newEncoding && newEncoding !== "uncompressed" && Object.keys(VALID_COMPRESSION_SCHEMES).includes(newEncoding)) {
       this.headers.addHeader("Content-Encoding", newEncoding);
+      this.compressor = newEncoding as VALID_COMPRESSION_SCHEME;
       return true;
     } else {
       this.headers.removeHeader("Content-Encoding");
+      this.compressor = "uncompressed";
       return false;
     }
   }
@@ -99,13 +119,15 @@ export class Response {
     };
   }
 
-  toString() {
+  async toString() {
     const status = this.status;
 
     if (status.hasBody) {
+      const compressor = VALID_COMPRESSION_SCHEMES[this.compressor];
+      const [length, body] = await compressor(this.responseBody);
       this.headers.addHeader("Content-Type", this.contentType);
-      this.headers.addHeader("Content-Length", this.responseBody.length.toString());
-      return  `${this.version} ${status.code} ${status.message}\r\n${this.headers.toString()}\r\n${this.responseBody}`;
+      this.headers.addHeader("Content-Length", length.toString());
+      return  `${this.version} ${status.code} ${status.message}\r\n${this.headers.toString()}\r\n${body}`;
     }
 
     this.headers.addHeader("Content-Length", "0");
