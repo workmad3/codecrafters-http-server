@@ -14,6 +14,10 @@ export class Headers {
     this.headers.set(name.toLowerCase(), value);
   }
 
+  removeHeader(name: string) {
+    this.headers.delete(name);
+  }
+
   hasHeader(name: string) {
     this.headers.has(name.toLowerCase())
   }

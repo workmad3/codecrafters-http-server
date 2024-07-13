@@ -52,6 +52,9 @@ const STATUSES: Record<number, StatusCode> = {
   }
 }
 
+export const VALID_COMPRESSION_SCHEMES = ["gzip"] as const;
+type VALID_COMPRESSION_SCHEME = typeof VALID_COMPRESSION_SCHEMES[number];
+
 export class Response {
   private statusCode = 200;
   private headers = new Headers();
@@ -75,6 +78,14 @@ export class Response {
 
   setType(newType: string) {
     this.contentType = newType;
+  }
+
+  setCompression(newEncoding: string | undefined) {
+    if (newEncoding && VALID_COMPRESSION_SCHEMES.includes(newEncoding as VALID_COMPRESSION_SCHEME)) {
+      this.headers.addHeader("Content-Encoding", newEncoding);
+    } else {
+      this.headers.removeHeader("Content-Encoding");
+    }
   }
 
   get status() {

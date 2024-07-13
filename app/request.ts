@@ -28,6 +28,7 @@ export class Request {
 
         if (this.headersComplete() && this.bodyComplete()) {
           this.response.setVersion(this.requestLine.version!);
+          this.response.setCompression(this.contentEncoding);
           this.handler.run(this, this.response);
         }
       } catch(e) {
@@ -122,5 +123,9 @@ export class Request {
   
   get contentLength() {
     return Number(this.getHeader("Content-Length") ?? "0");
+  }
+
+  get contentEncoding() {
+    return this.getHeader("Accept-Encoding");
   }
 }
