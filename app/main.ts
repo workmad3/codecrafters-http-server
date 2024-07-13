@@ -24,9 +24,13 @@ app.addHandler("GET", "/user-agent", (request, response) => {
 })
 
 app.addHandler("GET", /\/files\/(?<filename>\w+)/, async (request, response, matches) => {
-  response.setType("application/octet-stream");
-  const contents = await readFile(join(filesDirectory, matches.filename), "ascii");
-  response.setBody(contents);
+  try {
+    const contents = await readFile(join(filesDirectory, matches.filename), "ascii");
+    response.setType("application/octet-stream");
+    response.setBody(contents);
+  } catch(e) {
+    response.setStatus(404);
+  }
 });
 
 const server = new HttpServer(PORT, HOST, app);
