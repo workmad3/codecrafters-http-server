@@ -67,6 +67,10 @@ export class Response {
     this.responseBody = newBody ?? "";
   }
 
+  setType(newType: string) {
+    this.contentType = newType;
+  }
+
   get status() {
     return STATUSES[this.statusCode] ?? {
       code: this.statusCode,
