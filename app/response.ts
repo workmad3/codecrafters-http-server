@@ -83,8 +83,10 @@ export class Response {
   setCompression(newEncoding: string | undefined) {
     if (newEncoding && VALID_COMPRESSION_SCHEMES.includes(newEncoding as VALID_COMPRESSION_SCHEME)) {
       this.headers.addHeader("Content-Encoding", newEncoding);
+      return true;
     } else {
       this.headers.removeHeader("Content-Encoding");
+      return false;
     }
   }
 

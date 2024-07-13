@@ -28,7 +28,11 @@ export class Request {
 
         if (this.headersComplete() && this.bodyComplete()) {
           this.response.setVersion(this.requestLine.version!);
-          this.response.setCompression(this.contentEncoding);
+          for (const encoding of this.contentEncodings) {
+            if (this.response.setCompression(encoding)) {
+              break;
+            }
+          }
           this.handler.run(this, this.response);
         }
       } catch(e) {
@@ -125,7 +129,7 @@ export class Request {
     return Number(this.getHeader("Content-Length") ?? "0");
   }
 
-  get contentEncoding() {
-    return this.getHeader("Accept-Encoding");
+  get contentEncodings() {
+    return this.getHeader("Accept-Encoding")?.split(",").map(e => e.trim()) ?? [];
   }
 }
