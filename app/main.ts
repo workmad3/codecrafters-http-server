@@ -1,8 +1,6 @@
-import { createServer } from "node:net";
-import { env } from "node:process";
-
-import { Request } from "./request.js";
+import process, { env } from "node:process";
 import { Handler } from "./handler.js";
+import { HttpServer } from "./server.js";
 
 const HOST = env.HOST ?? "localhost";
 const PORT = Number(env.PORT ?? 4221);
@@ -15,10 +13,7 @@ app.addHandler("GET", /\/echo\/(?<str>\w+)/, (_request, response, matches) => {
   response.setBody(`${matches.str}`);
 })
 
-const server = createServer((s) => new Request(s, app));
+const server = new HttpServer(PORT, HOST, app);
+server.start(() => console.log("Starting server"));
 
-server.on("listening", () => {
-  console.log(`Listening on ${HOST}:${PORT}`)
-});
-
-server.listen(PORT, HOST);
+process.once('SIGINT', () => server.stop(() => console.log("Closing server")));
