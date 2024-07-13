@@ -13,6 +13,10 @@ app.addHandler("GET", /\/echo\/(?<str>\w+)/, (_request, response, matches) => {
   response.setBody(`${matches.str}`);
 })
 
+app.addHandler("GET", "/user-agent", (request, response) => {
+  response.setBody(request.getHeader("User-Agent"));
+})
+
 const server = new HttpServer(PORT, HOST, app);
 server.start(() => console.log("Starting server"));
 

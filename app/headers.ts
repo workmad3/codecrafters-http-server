@@ -1,6 +1,15 @@
 export class Headers {
   private headers = new Map<string, string>();
 
+  parseHeader(line: string) {
+    if(!line.includes(":")) {
+      return;
+    }
+
+    const [name, ...value] = line.split(":");
+    this.addHeader(name, value.join(":").trim());
+  }
+
   addHeader(name: string, value: string) {
     this.headers.set(name.toLowerCase(), value);
   }

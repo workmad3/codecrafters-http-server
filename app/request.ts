@@ -50,12 +50,26 @@ export class Request {
   }
 
   parseRequest() {
-    const lines = this.data.split("\r\n");
-    this.requestLine.parseRequestLine(lines[0]);
+    if (!this.data.includes("\r\n\r\n")) {
+      return;
+    }
+
+    const [head, body] = this.data.split("\r\n\r\n");
+    const [request, ...headers] = head.split("\r\n");
+
+    this.requestLine.parseRequestLine(request);
+
+    for(const header of headers) {
+      this.headers.parseHeader(header);
+    }
   }
 
   headersComplete() {
-    return this.requestLine.valid;
+    return this.requestLine.valid && this.data.includes("\r\n\r\n");
+  }
+
+  getHeader(name: string) {
+    return this.headers.getHeader(name);
   }
 
   get method() {
