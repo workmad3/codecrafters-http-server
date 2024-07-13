@@ -12,7 +12,7 @@ export class Request {
   private headers = new Headers();
 
   constructor(private readonly socket: Socket, private readonly handler: Handler) {
-    this.response = new Response(this);
+    this.response = new Response();
     this.initializeRequest();
   }
 
@@ -26,6 +26,7 @@ export class Request {
       this.parseRequest();
 
       if (this.headersComplete()) {
+        this.response.setVersion(this.requestLine.version!);
         this.handler.run(this, this.response);
       }
     });
