@@ -11,26 +11,26 @@ export class Headers {
   }
 
   addHeader(name: string, value: string) {
-    this.headers.set(name.toLowerCase(), value);
+    this.headers.set(this.normaliseName(name), value.trim());
   }
 
   removeHeader(name: string) {
-    this.headers.delete(name);
-  }
-
-  hasHeader(name: string) {
-    this.headers.has(name.toLowerCase())
+    this.headers.delete(this.normaliseName(name));
   }
 
   getHeader(name: string) {
-    return this.headers.get(name.toLowerCase());
+    return this.headers.get(this.normaliseName(name));
   }
 
   toBuffer() {
-    return [...this.headers].reduce((b, h) => 
+    return [...this.headers].reverse().reduce((b, h) => 
       Buffer.concat(
         [Buffer.from(`${h[0]}: ${h[1]}\r\n`), b]
       ), Buffer.from("\r\n")
     )
+  }
+
+  private normaliseName(name: string) {
+    return name.trim().toLowerCase();
   }
 }
