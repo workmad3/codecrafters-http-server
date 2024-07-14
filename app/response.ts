@@ -100,6 +100,10 @@ export class Response {
     }
   }
 
+  getHeader(name: string) {
+    return this.headers.getHeader(name);
+  }
+
   get status() {
     return STATUSES[this.statusCode] ?? {
       code: this.statusCode,
@@ -117,13 +121,14 @@ export class Response {
 
     if (status.hasBody && this.responseBody && this.responseBody.byteLength > 0) {
       const compressor = VALID_COMPRESSION_SCHEMES[this.compressor];
-      const body = await compressor(this.responseBody ?? Buffer.from(""));
+      const body = await compressor(this.responseBody);
       this.headers.addHeader("Content-Type", this.contentType);
       this.headers.addHeader("Content-Length", body.byteLength.toString());
       outputBuffers.push(this.headers.toBuffer());
       outputBuffers.push(body);
     } else {
       this.headers.addHeader("Content-Length", "0");
+      this.headers.removeHeader("Content-Type");
       outputBuffers.push(this.headers.toBuffer());
     }
 
