@@ -1,5 +1,5 @@
 import { Headers } from "./headers.js";
-import { gzip as gzipCb, Gzip } from "node:zlib";
+import { gzip as gzipCb } from "node:zlib";
 import { promisify } from "node:util";
 
 const gzip = promisify(gzipCb);
@@ -57,12 +57,8 @@ const STATUSES: Record<number, StatusCode> = {
 }
 
 export const VALID_COMPRESSION_SCHEMES = {
-  "gzip": async (body: string): Promise<Buffer> => {
-    const result = await gzip(Buffer.from(body));
- 
-    return result;
-  },
-  "uncompressed": async (body: string): Promise<Buffer> => Buffer.from(body),
+  "gzip": gzip,
+  "uncompressed": async (body: Buffer): Promise<Buffer> => body,
 }
 type VALID_COMPRESSION_SCHEME = keyof typeof VALID_COMPRESSION_SCHEMES;
 
@@ -70,7 +66,7 @@ export class Response {
   private statusCode = 200;
   private headers = new Headers();
   private contentType = "text/plain";
-  private responseBody = "";
+  private responseBody?: Buffer;
   private version = "HTTP/1.1";
   private compressor: VALID_COMPRESSION_SCHEME = "uncompressed";
 
@@ -84,8 +80,8 @@ export class Response {
     this.statusCode = newStatus;
   }
 
-  setBody(newBody: string | undefined) {
-    this.responseBody = newBody ?? "";
+  setBody(newBody: Buffer | string | undefined | null) {
+    this.responseBody = newBody ? Buffer.from(newBody) : undefined;
   }
 
   setType(newType: string) {
@@ -119,9 +115,9 @@ export class Response {
 
     outputBuffers.push(Buffer.from(`${this.version} ${status.code} ${status.message}\r\n`));
 
-    if (status.hasBody) {
+    if (status.hasBody && this.responseBody && this.responseBody.byteLength > 0) {
       const compressor = VALID_COMPRESSION_SCHEMES[this.compressor];
-      const body = await compressor(this.responseBody);
+      const body = await compressor(this.responseBody ?? Buffer.from(""));
       this.headers.addHeader("Content-Type", this.contentType);
       this.headers.addHeader("Content-Length", body.byteLength.toString());
       outputBuffers.push(this.headers.toBuffer());
