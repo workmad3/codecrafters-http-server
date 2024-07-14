@@ -12,7 +12,7 @@ describe("RequestLine", () => {
 
   it("Isn't valid with an incorrect method", () => {
     line.parseRequestLine("FOO /path HTTP/1.1");
-    
+
     expect(line.method).toBe("FOO");
     expect(line.validMethod()).toBe(false);
     expect(line.valid).toBe(false);
@@ -22,7 +22,7 @@ describe("RequestLine", () => {
     line.parseRequestLine("GET /path HTTP/1.1");
 
     expect(line.path).toBe("/path");
-    expect(line.validPath()).toBe(true)
+    expect(line.validPath()).toBe(true);
   });
 
   it("Extracts the version", () => {
@@ -47,5 +47,5 @@ describe("RequestLine", () => {
     expect(line.validPath()).toBe(true);
     expect(line.validVersion()).toBe(true);
     expect(line.valid).toBe(true);
-  })
-})
+  });
+});

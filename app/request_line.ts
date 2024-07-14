@@ -1,8 +1,14 @@
 const HTTP_METHODS = [
-  "GET", "POST", "PUT", "PATCH", "HEAD", "OPTIONS", "DELETE"
-] as const
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "HEAD",
+  "OPTIONS",
+  "DELETE",
+] as const;
 
-export type HTTP_METHOD = typeof HTTP_METHODS[number];
+export type HTTP_METHOD = (typeof HTTP_METHODS)[number];
 
 export class RequestLine {
   method?: HTTP_METHOD;
@@ -14,7 +20,9 @@ export class RequestLine {
   }
 
   validMethod() {
-    return Boolean(this.method) && HTTP_METHODS.includes(this.method as HTTP_METHOD);
+    return (
+      Boolean(this.method) && HTTP_METHODS.includes(this.method as HTTP_METHOD)
+    );
   }
 
   validPath() {
@@ -22,7 +30,7 @@ export class RequestLine {
   }
 
   validVersion() {
-    return this.version === "HTTP/1.1"
+    return this.version === "HTTP/1.1";
   }
 
   parseRequestLine(line: string) {

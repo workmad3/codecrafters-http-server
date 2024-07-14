@@ -2,7 +2,7 @@ export class Headers {
   private headers = new Map<string, string>();
 
   parseHeader(line: string) {
-    if(!line.includes(":")) {
+    if (!line.includes(":")) {
       return;
     }
 
@@ -23,11 +23,12 @@ export class Headers {
   }
 
   toBuffer() {
-    return [...this.headers].reverse().reduce((b, h) => 
-      Buffer.concat(
-        [Buffer.from(`${h[0]}: ${h[1]}\r\n`), b]
-      ), Buffer.from("\r\n")
-    )
+    return [...this.headers]
+      .reverse()
+      .reduce(
+        (b, h) => Buffer.concat([Buffer.from(`${h[0]}: ${h[1]}\r\n`), b]),
+        Buffer.from("\r\n")
+      );
   }
 
   private normaliseName(name: string) {

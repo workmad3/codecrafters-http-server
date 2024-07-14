@@ -1,4 +1,4 @@
-import { Headers } from "./headers.js"
+import { Headers } from "./headers.js";
 
 const headersToString = (h: Headers) => h.toBuffer().toString("binary");
 
@@ -51,7 +51,7 @@ describe("Headers", () => {
     headers.parseHeader("Some-Header    Foo");
 
     expect(headers.getHeader("Some-Header")).toBeUndefined();
-  })
+  });
 
   it("Trims whitespace from values", () => {
     const headers = new Headers();
@@ -76,4 +76,4 @@ describe("Headers", () => {
 
     expect(headers.getHeader("some-header")).toBe("Foo");
   });
-})
+});

@@ -1,19 +1,40 @@
-import type { Request} from "./request.js";
+import type { Request } from "./request.js";
 import type { Response } from "./response.js";
 import type { HTTP_METHOD } from "./request_line.js";
 
-export type HandlerFunction = (request: Request, response: Response) => void | Promise<void>;
-export type HandlerFunctionWithMatches = (request: Request, response: Response, matches: Record<string, string>) => void | Promise<void>;
+export type HandlerFunction = (
+  request: Request,
+  response: Response
+) => void | Promise<void>;
+export type HandlerFunctionWithMatches = (
+  request: Request,
+  response: Response,
+  matches: Record<string, string>
+) => void | Promise<void>;
 export class Handler {
   private handlers = new Map<HTTP_METHOD, Map<string, HandlerFunction>>();
-  private regexpHandlers = new Map<HTTP_METHOD, Map<RegExp, HandlerFunctionWithMatches>>();
+  private regexpHandlers = new Map<
+    HTTP_METHOD,
+    Map<RegExp, HandlerFunctionWithMatches>
+  >();
 
-  addHandler(method: HTTP_METHOD, path: RegExp, func: HandlerFunctionWithMatches): void;
+  addHandler(
+    method: HTTP_METHOD,
+    path: RegExp,
+    func: HandlerFunctionWithMatches
+  ): void;
   addHandler(method: HTTP_METHOD, path: string, func: HandlerFunction): void;
-  addHandler(method: HTTP_METHOD, path: string | RegExp, func: HandlerFunction | HandlerFunctionWithMatches): void {
+  addHandler(
+    method: HTTP_METHOD,
+    path: string | RegExp,
+    func: HandlerFunction | HandlerFunctionWithMatches
+  ): void {
     if (path instanceof RegExp) {
       if (!this.regexpHandlers.has(method)) {
-        this.regexpHandlers.set(method, new Map<RegExp, HandlerFunctionWithMatches>());
+        this.regexpHandlers.set(
+          method,
+          new Map<RegExp, HandlerFunctionWithMatches>()
+        );
       }
       this.regexpHandlers.get(method)?.set(path, func);
       return;
@@ -44,7 +65,8 @@ export class Handler {
       for (const handler of regexps) {
         const match = path.match(handler[0]);
         if (match) {
-          return (request: Request, response: Response) => handler[1](request, response, match.groups ?? {});
+          return (request: Request, response: Response) =>
+            handler[1](request, response, match.groups ?? {});
         }
       }
     }
@@ -54,17 +76,20 @@ export class Handler {
   run(request: Request, response: Response) {
     if (!this.hasHandler(request.method!, request.path!)) {
       response.setStatus(404);
-      request.end();
+      void request.end();
       return;
     } else {
-      const result = this.getHandler(request.method!, request.path!)?.(request, response);
+      const result = this.getHandler(request.method!, request.path!)?.(
+        request,
+        response
+      );
 
       if (result instanceof Promise) {
-        result.then(() => request.end());
+        void result.then(() => request.end());
         return;
       }
 
-      request.end();
+      void request.end();
       return;
     }
   }

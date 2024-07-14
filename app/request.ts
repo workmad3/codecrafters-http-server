@@ -11,7 +11,10 @@ export class Request {
   private requestLine = new RequestLine();
   private headers = new Headers();
 
-  constructor(private readonly socket: Socket, private readonly handler: Handler) {
+  constructor(
+    private readonly socket: Socket,
+    private readonly handler: Handler
+  ) {
     this.response = new Response();
     this.initializeRequest();
   }
@@ -35,11 +38,11 @@ export class Request {
           }
           this.handler.run(this, this.response);
         }
-      } catch(e) {
+      } catch (e) {
         console.log(e);
 
         this.response.setStatus(500);
-        this.end();
+        void this.end();
       }
     });
 
@@ -48,11 +51,11 @@ export class Request {
         console.log("Request didn't terminate correctly");
         console.log(this.data);
       }
-    })
+    });
 
     this.socket.on("close", () => {
       this.socket.end();
-    })
+    });
   }
 
   async end() {
@@ -74,7 +77,7 @@ export class Request {
 
     this.requestLine.parseRequestLine(request);
 
-    for(const header of headers) {
+    for (const header of headers) {
       this.headers.parseHeader(header);
     }
   }
@@ -84,7 +87,7 @@ export class Request {
   }
 
   bodyComplete() {
-    const body = this.body; 
+    const body = this.body;
 
     if (body.length < this.contentLength) {
       return false;
@@ -127,12 +130,16 @@ export class Request {
   get contentType() {
     return this.getHeader("Content-Type") ?? "application/octet-stream";
   }
-  
+
   get contentLength() {
     return Number(this.getHeader("Content-Length") ?? "0");
   }
 
   get contentEncodings() {
-    return this.getHeader("Accept-Encoding")?.split(",").map(e => e.trim()) ?? [];
+    return (
+      this.getHeader("Accept-Encoding")
+        ?.split(",")
+        .map((e) => e.trim()) ?? []
+    );
   }
 }
