@@ -57,7 +57,9 @@ export class Request {
 
   async end() {
     try {
-      this.socket.write(await this.response.toString());
+      const response = await this.response.toBuffer();
+      console.log(response);
+      this.socket.write(response);
       this.finished = true;
     } finally {
       this.socket.end();

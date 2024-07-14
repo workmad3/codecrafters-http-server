@@ -1,5 +1,5 @@
 import { Headers } from "./headers.js";
-import { gzip as gzipCb } from "node:zlib";
+import { gzip as gzipCb, Gzip } from "node:zlib";
 import { promisify } from "node:util";
 
 const gzip = promisify(gzipCb);
@@ -57,18 +57,12 @@ const STATUSES: Record<number, StatusCode> = {
 }
 
 export const VALID_COMPRESSION_SCHEMES = {
-  "gzip": async (body: string) => {
+  "gzip": async (body: string): Promise<Buffer> => {
     const result = await gzip(Buffer.from(body));
-
-    const length = result.byteLength;
-    const data = result.toString();
  
-    return [length, data];
+    return result;
   },
-  "uncompressed": async (body: string) => [
-    body.length, 
-    body
-  ],
+  "uncompressed": async (body: string): Promise<Buffer> => Buffer.from(body),
 }
 type VALID_COMPRESSION_SCHEME = keyof typeof VALID_COMPRESSION_SCHEMES;
 
@@ -119,18 +113,24 @@ export class Response {
     };
   }
 
-  async toString() {
+  async toBuffer() {
     const status = this.status;
+    const outputBuffers: Buffer[] = []
+
+    outputBuffers.push(Buffer.from(`${this.version} ${status.code} ${status.message}\r\n`));
 
     if (status.hasBody) {
       const compressor = VALID_COMPRESSION_SCHEMES[this.compressor];
-      const [length, body] = await compressor(this.responseBody);
+      const body = await compressor(this.responseBody);
       this.headers.addHeader("Content-Type", this.contentType);
-      this.headers.addHeader("Content-Length", length.toString());
-      return  `${this.version} ${status.code} ${status.message}\r\n${this.headers.toString()}\r\n${body}`;
+      this.headers.addHeader("Content-Length", body.byteLength.toString());
+      outputBuffers.push(this.headers.toBuffer());
+      outputBuffers.push(body);
+    } else {
+      this.headers.addHeader("Content-Length", "0");
+      outputBuffers.push(this.headers.toBuffer());
     }
 
-    this.headers.addHeader("Content-Length", "0");
-    return  `${this.version} ${status.code} ${status.message}\r\n${this.headers.toString()}\r\n`;
+    return Buffer.concat(outputBuffers);
   }
 }

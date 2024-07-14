@@ -26,7 +26,11 @@ export class Headers {
     return this.headers.get(name.toLowerCase());
   }
 
-  toString() {
-    return [...this.headers].map(header => `${header[0]}: ${header[1]}\r\n`).join("");
+  toBuffer() {
+    return [...this.headers].reduce((b, h) => 
+      Buffer.concat(
+        [Buffer.from(`${h[0]}: ${h[1]}\r\n`), b]
+      ), Buffer.from("\r\n")
+    )
   }
 }
