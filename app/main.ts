@@ -47,6 +47,7 @@ app.addHandler(
   async (request, response, matches) => {
     try {
       const contents = request.body;
+      if (!contents) throw new Error("No file sent");
       await writeFile(join(filesDirectory, matches.filename), contents);
 
       response.setStatus(201);
