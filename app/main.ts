@@ -15,7 +15,7 @@ const app = new Handler();
 
 app.addHandler("GET", "/", (_request, _response) => {});
 
-app.addHandler("GET", /\/echo\/(?<str>\w+)/, (_request, response, matches) => {
+app.addHandler("GET", /\/echo\/(?<str>.+)/, (_request, response, matches) => {
   response.setBody(`${matches.str}`);
 });
 
@@ -28,9 +28,8 @@ app.addHandler(
   /\/files\/(?<filename>(\w|-)+)/,
   async (_request, response, matches) => {
     try {
-      const contents = await readFile(
-        join(filesDirectory, matches.filename),
-        "ascii"
+      const contents: Buffer = await readFile(
+        join(filesDirectory, matches.filename)
       );
       response.setType("application/octet-stream");
       response.setBody(contents);
