@@ -5,7 +5,7 @@ import { Headers } from "./headers.js";
 import type { Handler } from "./handler.js";
 
 export class Request {
-  private data: string = "";
+  private data: Buffer = Buffer.from("");
   private finished = false;
   private response: Response;
   private requestLine = new RequestLine();
@@ -24,7 +24,7 @@ export class Request {
       if (this.finished) {
         throw new Error("Data received after request finished");
       }
-      this.data += data.toString();
+      this.data = Buffer.concat([this.data, data]);
 
       try {
         this.parseRequest();
@@ -89,6 +89,10 @@ export class Request {
   bodyComplete() {
     const body = this.body;
 
+    if (!body) {
+      return false;
+    }
+
     if (body.length < this.contentLength) {
       return false;
     }
@@ -105,12 +109,24 @@ export class Request {
   }
 
   get head() {
-    const [head, _] = this.data.split("\r\n\r\n");
-    return head;
+    const index = this.data.indexOf("\r\n\r\n");
+    const head = Buffer.alloc(index);
+    this.data.copy(head, 0, 0, index);
+    return head.toString("utf-8");
   }
 
   get body() {
-    const [_, body] = this.data.split("\r\n\r\n");
+    if (!this.headersComplete()) {
+      return null;
+    }
+    const index = this.data.indexOf("\r\n\r\n") + 4;
+
+    const length = Number(this.getHeader("Content-length") ?? 0);
+
+    if (length === 0) return Buffer.from("");
+
+    const body = Buffer.alloc(length);
+    this.data.copy(body, 0, index, index + length);
 
     return body;
   }
